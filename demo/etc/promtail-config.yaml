@@ -1,0 +1,42 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    external_labels:
+      env: "prod"
+      node_name: "local"
+
+scrape_configs:
+- job_name: system
+  static_configs:
+
+  - targets:
+      - localhost
+    labels:
+      job: logs
+      __path__: /logs/*.log
+
+  pipeline_stages:
+
+    - match:
+        selector: '{job="logs"}'
+        stages:
+          - json:
+              expressions:
+                time: '"@timestamp"'
+                level: level
+                logger_name: logger_name
+          - timestamp:
+              source: time
+              format: RFC3339Nano
+          - regex:
+              source: filename
+              expression: '/logs/(?P<app>.+)\.log'
+          - labels:
+              app:
+              level:
+              logger_name:
+          - labeldrop:
+              - filename

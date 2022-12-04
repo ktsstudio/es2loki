@@ -1,0 +1,105 @@
+name: asynctnt
+
+on: [push]
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ ubuntu-latest ]
+        python-version: ['3.9', '3.10']
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build poetry
+          poetry export -f requirements.txt | python -m pip install -r /dev/stdin
+      - name: Run tests
+        run: |
+          make lint
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}"
+
+  build-wheels:
+    name: Build wheels on ${{ matrix.os }}
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    needs:
+      - test
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - uses: actions/setup-python@v2
+
+      - name: Install cibuildwheel
+        run: python -m pip install --upgrade cibuildwheel
+
+      - name: Build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD: "cp39-* cp310-*"
+
+      - uses: actions/upload-artifact@v2
+        with:
+          name: wheels
+          path: ./wheelhouse/*.whl
+
+  publish:
+    name: Publish wheels
+    if: github.event_name == 'push' && contains(github.ref, 'refs/tags/')
+    needs:
+      - build-wheels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get tag
+        id: get_tag
+        run: echo ::set-output name=TAG::${GITHUB_REF/refs\/tags\//}
+      - run: echo "Current tag is ${{ steps.get_tag.outputs.TAG }}"
+      - uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build twine
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: wheels
+          path: wheels
+      - name: Publish dist
+        run: |
+          python -m build --sdist
+          tree wheels
+          tree dist
+          twine upload dist/* wheels/*
+        env:
+          TWINE_USERNAME: ${{ secrets.TWINE_USERNAME }}
+          TWINE_PASSWORD: ${{ secrets.TWINE_PASSWORD }}
+      - uses: marvinpinto/action-automatic-releases@latest
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          prerelease: false
+          title: ${{ steps.get_tag.outputs.TAG }}
+          files: |
+            wheels/*.whl
+            dist/*

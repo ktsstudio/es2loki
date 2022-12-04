@@ -1,0 +1,119 @@
+version: '3.8'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.2
+    environment:
+      - node.name=es
+      - cluster.name=demo-es
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+    networks:
+      - main
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.5.2
+    networks:
+      - main
+    volumes:
+      - ./demo/etc/filebeat-config.yaml:/usr/share/filebeat/filebeat.yml:ro
+      - filebeat:/usr/share/filebeat/data
+      - ./demo/logs-old:/logs:ro
+    environment:
+      - ELASTICSEARCH_HOSTS=elasticsearch:9200
+    command: [ "-c", "/usr/share/filebeat/filebeat.yml", "-e", "-d", "*", "--strict.perms=false" ]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.5.2
+    environment:
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+      xpack.security.enabled: 'false'
+    ports:
+      - 5601:5601
+    networks:
+      - main
+    depends_on:
+      - elasticsearch
+
+  loki:
+    image: grafana/loki:2.7.0
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/loki.yaml
+    volumes:
+      - ./demo/etc/loki-config.yaml/:/etc/loki/loki.yaml
+      - loki:/loki
+    networks:
+      - main
+
+  promtail:
+    image: grafana/promtail:2.7.0
+    volumes:
+      - ./demo/logs-new:/logs
+      - ./demo/etc/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - promtail:/var/log
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - main
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana:/var/lib/grafana
+      - ./demo/etc/grafana.ini:/etc/grafana/grafana.ini
+      - ./demo/etc/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/all.yaml
+    networks:
+      - main
+
+  pg:
+    image: postgres:14-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 5432:5432
+    networks:
+      - main
+    volumes:
+      - pg:/var/lib/postgresql/data
+
+  es2loki_example:
+    build:
+      context: .
+    image: es2loki:example
+    command:
+      - demo/example.py
+    environment:
+      - "DRY_RUN=0"
+      - "ELASTIC_HOSTS=http://elasticsearch:9200"
+      - "ELASTIC_INDEX=filebeat-*"
+      - "LOKI_URL=http://loki:3100"
+      - "PERSIST_MODE=db"
+      - "PERSIST_DB_URL=postgres://postgres:postgres@pg:5432/postgres"
+    networks:
+      - main
+    depends_on:
+      - pg
+
+volumes:
+  es:
+  filebeat:
+  loki:
+  promtail:
+  grafana:
+  pg:
+
+networks:
+  main:
+    driver: bridge

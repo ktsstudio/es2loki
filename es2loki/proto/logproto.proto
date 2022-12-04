@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package logproto;
+
+option go_package = "github.com/grafana/loki/pkg/logproto";
+
+import "google/protobuf/timestamp.proto";
+import "gogo.proto";
+
+message PushRequest {
+  repeated StreamAdapter streams = 1 [(gogoproto.jsontag) = "streams", (gogoproto.customtype) = "Stream"];
+}
+
+message StreamAdapter {
+  string labels = 1 [(gogoproto.jsontag) = "labels"];
+  repeated EntryAdapter entries = 2 [(gogoproto.nullable) = false, (gogoproto.jsontag) = "entries"];
+}
+
+message EntryAdapter {
+  google.protobuf.Timestamp timestamp = 1 [(gogoproto.stdtime) = true, (gogoproto.nullable) = false, (gogoproto.jsontag) = "ts"];
+  string line = 2 [(gogoproto.jsontag) = "line"];
+}

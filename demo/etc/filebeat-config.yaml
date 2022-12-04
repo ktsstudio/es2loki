@@ -1,0 +1,34 @@
+filebeat.config:
+  modules:
+    path: ${path.config}/modules.d/*.yml
+    reload.enabled: false
+
+filebeat.inputs:
+- type: log
+  paths:
+    - /logs/camunda.log
+  fields:
+    service_name: camunda
+
+setup.template:
+  settings:
+    index.number_of_shards: 1
+    index.codec: best_compression
+  name: "filebeat_custom"
+  pattern: "filebeat-*"
+
+processors:
+- add_cloud_metadata: ~
+- decode_json_fields:
+   fields: ["message"]
+   process_array: false
+   max_depth: 1
+   target: ""
+   overwrite_keys: true
+- add_docker_metadata: ~
+
+output.elasticsearch:
+  hosts: '${ELASTICSEARCH_HOSTS:elasticsearch:9200}'
+  index: filebeat-%{+yyyy.MM-ww}
+  username: '${ELASTICSEARCH_USERNAME:}'
+  password: '${ELASTICSEARCH_PASSWORD:}'

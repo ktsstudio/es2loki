@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "es2loki-demo"
+version = "0.1.0"
+description = ""
+authors = ["igorcoding <igorcoding@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+es2loki = "*"
+
+[tool.poetry.group.lint.dependencies]
+black = "^22.10.0"
+mypy = "^0.991"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

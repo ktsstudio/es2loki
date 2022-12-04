@@ -1,0 +1,52 @@
+[tool.poetry]
+name = "es2loki"
+version = "0.1.0"
+description = ""
+authors = ["igorcoding <igorcoding@gmail.com>"]
+license = "Apache"
+readme = "README.md"
+homepage = "https://github.com/ktsstudio/es2loki"
+repository = "https://github.com/ktsstudio/es2loki"
+keywords = ["elasticsearch", "loki"]
+packages = [
+    { include = "es2loki" },
+]
+#include = [
+#    "LICENSE",
+#]
+classifiers = [
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+aiohttp = ">=3.8.3,<4"
+elasticsearch = ">=8.5.2,<9"
+yarl = "*"
+frozendict = "*"
+protobuf = "*"
+python-snappy = "*"
+tortoise-orm = {extras = ["asyncpg"], version = "*"}
+
+[tool.poetry.group.lint.dependencies]
+black = "^22.10.0"
+mypy = "^0.991"
+isort = "^5.10.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[[tool.mypy.overrides]]
+module = '*.*'
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]

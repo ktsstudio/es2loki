@@ -127,3 +127,14 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# IDE
+.idea
+.vscode
+
+# Custom
+rpmtools
+local
+.DS_Store
+
+demo/logs*
