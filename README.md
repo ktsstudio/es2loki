@@ -7,7 +7,7 @@ To use es2loki currently you need to define your own mapping of elasticsearch do
 to labels for Grafana Loki.
 
 ## Demo
-You may find helpful a folder [demo](demo) which contains a fully-sufficient demo stand
+You may find helpful a [demo](demo) folder which contains a fully-sufficient demo stand
 that demonstrates transferring logs using `es2loki`.
 
 ## Usage
@@ -26,7 +26,7 @@ In order to override default `es2loki` behaviour you need to subclass
 a `es2loki.BaseTransfer` class.
 
 To declare how documents map to Loki labels you have to override a
-`extract_doc_labels` method (see [demo/example.py]()):
+`extract_doc_labels` method (see [demo/example.py](demo/example.py)):
 
 ```python
 
@@ -53,7 +53,7 @@ if __name__ == "__main__":
     sys.exit(run_transfer(TransferLogs()))
 ```
 
-You can find more examples in the [demo]() folder.
+You can find more examples in the [demo](demo) folder.
 
 ### Sorting
 
