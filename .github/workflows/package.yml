@@ -1,4 +1,4 @@
-name: asynctnt
+name: es2loki python package
 
 on: [push]
 
