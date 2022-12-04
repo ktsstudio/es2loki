@@ -23,7 +23,7 @@ classifiers = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = ">=3.9,<3.11"
 aiohttp = ">=3.8.3,<4"
 elasticsearch = ">=8.5.2,<9"
 yarl = "*"
