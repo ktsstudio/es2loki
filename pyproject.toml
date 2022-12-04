@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "es2loki"
-version = "0.1.0"
-description = ""
+version = "0.1.1"
+description = "es2loki is a migration library that helps to transfer logs from Elasticsearch to Grafana Loki"
 authors = ["igorcoding <igorcoding@gmail.com>"]
-license = "Apache"
+license = "Apache 2.0"
 readme = "README.md"
 homepage = "https://github.com/ktsstudio/es2loki"
 repository = "https://github.com/ktsstudio/es2loki"
@@ -11,9 +11,9 @@ keywords = ["elasticsearch", "loki"]
 packages = [
     { include = "es2loki" },
 ]
-#include = [
-#    "LICENSE",
-#]
+include = [
+    "LICENSE",
+]
 classifiers = [
     "Intended Audience :: Developers",
     "License :: OSI Approved :: Apache Software License",

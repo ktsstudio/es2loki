@@ -1,6 +1,6 @@
 import sys
 
-from es2loki.commands.transfer import BaseTransferLogs, run_transfer
+from es2loki.commands.transfer import BaseTransfer, run_transfer
 
 if __name__ == "__main__":
-    sys.exit(run_transfer(BaseTransferLogs()))
+    sys.exit(run_transfer(BaseTransfer()))

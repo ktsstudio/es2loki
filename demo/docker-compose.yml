@@ -25,9 +25,9 @@ services:
     networks:
       - main
     volumes:
-      - ./demo/etc/filebeat-config.yaml:/usr/share/filebeat/filebeat.yml:ro
+      - ./etc/filebeat-config.yaml:/usr/share/filebeat/filebeat.yml:ro
       - filebeat:/usr/share/filebeat/data
-      - ./demo/logs-old:/logs:ro
+      - ./logs-old:/logs:ro
     environment:
       - ELASTICSEARCH_HOSTS=elasticsearch:9200
     command: [ "-c", "/usr/share/filebeat/filebeat.yml", "-e", "-d", "*", "--strict.perms=false" ]
@@ -50,7 +50,7 @@ services:
       - "3100:3100"
     command: -config.file=/etc/loki/loki.yaml
     volumes:
-      - ./demo/etc/loki-config.yaml/:/etc/loki/loki.yaml
+      - ./etc/loki-config.yaml/:/etc/loki/loki.yaml
       - loki:/loki
     networks:
       - main
@@ -58,8 +58,8 @@ services:
   promtail:
     image: grafana/promtail:2.7.0
     volumes:
-      - ./demo/logs-new:/logs
-      - ./demo/etc/promtail-config.yaml:/etc/promtail/config.yml:ro
+      - ./logs-new:/logs
+      - ./etc/promtail-config.yaml:/etc/promtail/config.yml:ro
       - promtail:/var/log
     command: -config.file=/etc/promtail/config.yml
     networks:
@@ -71,8 +71,8 @@ services:
       - "3000:3000"
     volumes:
       - grafana:/var/lib/grafana
-      - ./demo/etc/grafana.ini:/etc/grafana/grafana.ini
-      - ./demo/etc/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/all.yaml
+      - ./etc/grafana.ini:/etc/grafana/grafana.ini
+      - ./etc/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/all.yaml
     networks:
       - main
 
@@ -90,10 +90,9 @@ services:
 
   es2loki_example:
     build:
-      context: .
+      context: ..
     image: es2loki:example
-    command:
-      - demo/example.py
+    entrypoint: sh -c 'sleep 60 && /venv/bin/python demo/example.py'
     environment:
       - "DRY_RUN=0"
       - "ELASTIC_HOSTS=http://elasticsearch:9200"
@@ -105,6 +104,12 @@ services:
       - main
     depends_on:
       - pg
+      - elasticsearch
+      - kibana
+      - filebeat
+      - loki
+      - promtail
+      - grafana
 
 volumes:
   es:

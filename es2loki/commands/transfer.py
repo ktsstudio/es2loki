@@ -21,7 +21,7 @@ from es2loki.pos.types import Positions
 from es2loki.utils import seconds_to_str, size_str
 
 
-class BaseTransferLogs(Command):
+class BaseTransfer(Command):
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("execute_timeout", 128)
         super().__init__(*args, **kwargs)
@@ -49,7 +49,7 @@ class BaseTransferLogs(Command):
         self.persist_start_over = bool(int(os.getenv("PERSIST_START_OVER", 0)))
         self.persist_mode = os.getenv("PERSIST_MODE", "db")
         self.persist_file_dir = (
-            os.getenv("PERSIST_FILE_DIR", "/var/logstransfer") or ""
+            os.getenv("PERSIST_FILE_DIR", "/var/es2loki") or ""
         ).strip()
         self.persist_db_url = os.getenv(
             "PERSIST_DB_URL", "postgres://127.0.0.1:5432/postgres"
@@ -303,7 +303,7 @@ class BaseTransferLogs(Command):
             )
 
 
-def run_transfer(cmd: BaseTransferLogs, setup_logging: bool = True) -> int:
+def run_transfer(cmd: BaseTransfer, setup_logging: bool = True) -> int:
     if setup_logging:
         logging.basicConfig(
             format="%(created)f %(asctime)s.%(msecs)03d [%(name)s] %(levelname)s: %(message)s",
