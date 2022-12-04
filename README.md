@@ -1,5 +1,9 @@
 # es2loki
 
+[![Build](https://github.com/ktsstudio/es2loki/actions/workflows/package.yml/badge.svg?branch=main)](https://github.com/ktsstudio/es2loki/actions)
+[![Build](https://github.com/ktsstudio/es2loki/actions/workflows/docker.yml/badge.svg?branch=main)](https://github.com/ktsstudio/es2loki/actions)
+[![PyPI](https://img.shields.io/pypi/v/es2loki.svg)](https://pypi.python.org/pypi/es2loki)
+
 `es2loki` is a migration library that helps to transfer logs from
 Elasticsearch to Grafana Loki.
 
