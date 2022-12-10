@@ -13,9 +13,7 @@ class FileStateStore(StateStore):
         if not self.persist_dir:
             raise ValueError("persist directory is invalid")
 
-        self.state_file = os.path.join(
-            self.persist_dir, f"state-{file_suffix}.txt"
-        )
+        self.state_file = os.path.join(self.persist_dir, f"state-{file_suffix}.txt")
 
         self._state_lock = asyncio.Lock()
 

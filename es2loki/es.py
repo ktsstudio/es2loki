@@ -70,8 +70,8 @@ class ElasticsearchScroller(AsyncIterable[tuple[dict, State]]):
 
         doc = self._buffer.popleft()
         return doc, State(
-            timestamp=doc.get('_source', {}).get(self._timestamp_field),
-            value=doc["sort"]
+            timestamp=doc.get("_source", {}).get(self._timestamp_field),
+            value=doc["sort"],
         )
 
     def _refill_buffer_bg(self) -> bool:
