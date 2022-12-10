@@ -1,14 +1,7 @@
-import re
 import sys
 from typing import MutableMapping, Optional
 
 from es2loki import BaseTransfer, run_transfer
-
-http_request_re = re.compile(
-    r".*(POST|GET|OPTIONS|PUT|DELETE|HEAD|CONNECT|TRACE|PATCH) .+ HTTP/1\..*"
-)
-invalid_char_re = re.compile(r"(\W+)")
-invalid_char_domain_re = re.compile(r"[^\w.\-_]")
 
 
 class Transfer(BaseTransfer):

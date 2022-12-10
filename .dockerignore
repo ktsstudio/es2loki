@@ -6,11 +6,8 @@
 docker-compose.yaml
 docker-compose.yml
 Dockerfile
-demo/logs*
-demo/etc
-demo/Dockerfile
-demo/.dockerignore
-demo/pyproject.toml
+demo/*
+!demo/*.py
 local
 build
 env

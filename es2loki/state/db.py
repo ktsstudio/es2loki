@@ -2,28 +2,28 @@ import asyncio
 
 from tortoise import Model, Tortoise, fields
 
-from es2loki.pos import Positions, PositionsStore
+from es2loki.state import State, StateStore
 
 
-class PositionsModel(Model):
+class StateModel(Model):
     class Meta:
-        table = "positions"
+        table = "state"
 
     id = fields.IntField(pk=True)
     name = fields.CharField(max_length=255, unique=True)
-    timestamp = fields.BigIntField()
-    log_offset = fields.IntField()
     transferred = fields.IntField()
+    timestamp = fields.CharField(max_length=100)
+    value = fields.JSONField()
 
-    def to_positions(self) -> Positions:
-        return Positions(
+    def to_state(self) -> State:
+        return State(
             timestamp=self.timestamp,
-            log_offset=self.log_offset,
+            value=self.value,
             transferred=self.transferred,
         )
 
 
-class DBPositionsStore(PositionsStore):
+class DBStateStore(StateStore):
     def __init__(
         self,
         *,
@@ -39,7 +39,7 @@ class DBPositionsStore(PositionsStore):
         while not stop_event.is_set():
             try:
                 await Tortoise.init(
-                    db_url=self._url, modules={"models": ["es2loki.pos.db"]}
+                    db_url=self._url, modules={"models": ["es2loki.state.db"]}
                 )
                 await Tortoise.generate_schemas()
                 self.logger.error("connected successfully to db")
@@ -51,28 +51,28 @@ class DBPositionsStore(PositionsStore):
     async def init(self, stop_event: asyncio.Event):
         await self.connect(stop_event)
 
-    async def load(self) -> Positions:
-        row = await PositionsModel.filter(name=self.name).get_or_none()
+    async def load(self) -> State:
+        row = await StateModel.filter(name=self.name).get_or_none()
         if row is None:
-            return Positions()
-        return row.to_positions()
+            return State()
+        return row.to_state()
 
-    async def save(self, pos: Positions, transferred_docs: int):
-        m = PositionsModel(
+    async def save(self, state: State, transferred_docs: int):
+        m = StateModel(
             name=self.name,
-            timestamp=pos.timestamp,
-            log_offset=pos.log_offset,
+            timestamp=state.timestamp,
+            value=state.value,
             transferred=transferred_docs,
         )
         if self.dry_run:
-            self.logger.info("[DRY_RUN] saving positions to db")
+            self.logger.info("[DRY_RUN] saving state to db")
         else:
-            self.logger.info("saving positions to db")
+            self.logger.info("saving state to db")
             await m.save(update_fields=["timestamp", "log_offset", "transferred"])
 
     async def cleanup(self):
         if self.dry_run:
-            self.logger.info("[DRY_RUN] cleaning up positions %s", self.name)
+            self.logger.info("[DRY_RUN] cleaning up state %s", self.name)
         else:
-            self.logger.info("cleaning up positions %s", self.name)
-            await PositionsModel.filter(name=self.name).delete()
+            self.logger.info("cleaning up state %s", self.name)
+            await StateModel.filter(name=self.name).delete()

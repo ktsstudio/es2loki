@@ -91,10 +91,10 @@ override a `make_es_sort` and `make_es_search_after` methods.
 | LOKI_POOL_LOAD_FACTOR   | 10                                 | Maximum number of push non-waiting requests                        |
 | LOKI_PUSH_MODE          | pb                                 | `pb` - protobuf + snappy, `gzip` - json + gzip, `json` - just json |
 | LOKI_WAIT_TIMEOUT       | 0                                  | How much time (in seconds) to wait after a Loki push request       |
-| PERSIST_MODE            | db                                 | Configures es2loki persistence (`db` is recommended).              |
-| PERSIST_START_OVER      |                                    | Clean up persisted data and start over                             |
-| PERSIST_FILE_DIR        | /var/es2loki                       | `file` persistence location                                        |
-| PERSIST_DB_URL          | postgres://127.0.0.1:5432/postgres | Database URL for `db` persistence                                  |
+| STATE_MODE              | db                                 | Configures es2loki persistence (`db` is recommended).              |
+| STATE_START_OVER        |                                    | Clean up persisted data and start over                             |
+| STATE_FILE_DIR          | /var/es2loki                       | `file` persistence location                                        |
+| STATE_DB_URL            | postgres://127.0.0.1:5432/postgres | Database URL for `db` persistence                                  |
 
 
 

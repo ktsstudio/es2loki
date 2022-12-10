@@ -16,16 +16,6 @@ class TransferPacketbeat(BaseTransfer):
         sort = super().make_es_sort()
         return [sort[0]]  # sort only by timestamp
 
-    def make_es_search_after(self) -> Optional[list]:
-        pos = self.latest_positions
-
-        if not pos or pos.iszero:
-            return None
-
-        return [
-            pos.timestamp,
-        ]
-
     def extract_doc_labels(self, source: dict) -> Optional[MutableMapping[str, str]]:
         method = "null"
 

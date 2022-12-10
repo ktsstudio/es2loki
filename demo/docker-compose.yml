@@ -92,14 +92,13 @@ services:
     build:
       context: ..
     image: es2loki:example
-    entrypoint: sh -c 'sleep 60 && /venv/bin/python demo/example.py'
+    entrypoint: sh -c 'sleep 180 && /venv/bin/python demo/example.py'
     environment:
       - "DRY_RUN=0"
       - "ELASTIC_HOSTS=http://elasticsearch:9200"
       - "ELASTIC_INDEX=filebeat-*"
       - "LOKI_URL=http://loki:3100"
-      - "PERSIST_MODE=db"
-      - "PERSIST_DB_URL=postgres://postgres:postgres@pg:5432/postgres"
+      - "STATE_DB_URL=postgres://postgres:postgres@pg:5432/postgres"
     networks:
       - main
     depends_on:

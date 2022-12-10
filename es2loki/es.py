@@ -7,10 +7,10 @@ from typing import Callable, Optional
 from elasticsearch import AsyncElasticsearch
 
 from es2loki.aio import wait_task
-from es2loki.pos.types import Positions
+from es2loki.state.types import State
 
 
-class ElasticsearchScroller(AsyncIterable[tuple[dict, Positions]]):
+class ElasticsearchScroller(AsyncIterable[tuple[dict, State]]):
     def __init__(
         self,
         es: AsyncElasticsearch,
@@ -46,7 +46,7 @@ class ElasticsearchScroller(AsyncIterable[tuple[dict, Positions]]):
     def __aiter__(self):
         return self
 
-    async def __anext__(self) -> tuple[dict, Positions]:
+    async def __anext__(self) -> tuple[dict, State]:
         if not self.is_running:
             raise StopAsyncIteration()
 
@@ -69,7 +69,10 @@ class ElasticsearchScroller(AsyncIterable[tuple[dict, Positions]]):
             self._refill_buffer_bg()
 
         doc = self._buffer.popleft()
-        return doc, Positions(*doc["sort"])
+        return doc, State(
+            timestamp=doc.get('_source', {}).get(self._timestamp_field),
+            value=doc["sort"]
+        )
 
     def _refill_buffer_bg(self) -> bool:
         if not self.is_running:

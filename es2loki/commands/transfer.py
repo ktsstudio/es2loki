@@ -14,10 +14,10 @@ from es2loki.aio.pool import AsyncPool
 from es2loki.commands import Command
 from es2loki.es import ElasticsearchScroller
 from es2loki.loki import Loki, LokiBatch
-from es2loki.pos import PositionsStore
-from es2loki.pos.db import DBPositionsStore
-from es2loki.pos.file import FilePositionsStore
-from es2loki.pos.types import Positions
+from es2loki.state import StateStore
+from es2loki.state.db import DBStateStore
+from es2loki.state.file import FileStateStore
+from es2loki.state.types import State
 from es2loki.utils import seconds_to_str, size_str
 
 
@@ -46,26 +46,26 @@ class BaseTransfer(Command):
         self.loki_push_mode = os.getenv("LOKI_PUSH_MODE", "pb")
         self.loki_wait_timeout = float(os.getenv("LOKI_WAIT_TIMEOUT", 0))
 
-        self.persist_start_over = bool(int(os.getenv("PERSIST_START_OVER", 0)))
-        self.persist_mode = os.getenv("PERSIST_MODE", "db")
-        self.persist_file_dir = (
-            os.getenv("PERSIST_FILE_DIR", "/var/es2loki") or ""
+        self.state_start_over = bool(int(os.getenv("STATE_START_OVER", 0)))
+        self.state_mode = os.getenv("STATE_MODE", "db")
+        self.state_file_dir = (
+            os.getenv("STATE_FILE_DIR", "/var/es2loki") or ""
         ).strip()
-        self.persist_db_url = os.getenv(
-            "PERSIST_DB_URL", "postgres://127.0.0.1:5432/postgres"
+        self.state_db_url = os.getenv(
+            "STATE_DB_URL", "postgres://127.0.0.1:5432/postgres"
         )
 
-        self.pos_store: PositionsStore
+        self.state_store: StateStore
 
-        if self.persist_mode == "db":
-            self.pos_store = DBPositionsStore(
+        if self.state_mode == "db":
+            self.state_store = DBStateStore(
                 name=self.es_index,
-                url=self.persist_db_url,
+                url=self.state_db_url,
                 dry_run=self.dry_run,
             )
         else:
-            self.pos_store = FilePositionsStore(
-                persist_dir=self.persist_file_dir,
+            self.state_store = FileStateStore(
+                state_dir=self.state_file_dir,
                 file_suffix=self.es_index,
                 dry_run=self.dry_run,
             )
@@ -91,14 +91,14 @@ class BaseTransfer(Command):
         self._eta_calc = None
 
         self.loki_batch = LokiBatch()
-        self._latest_positions = None
+        self._latest_state = None
         self.loki_pool = None
 
         self._flush_lock = asyncio.Lock()
 
     @property
-    def latest_positions(self) -> Positions:
-        return self._latest_positions
+    def latest_state(self) -> State:
+        return self._latest_state
 
     @staticmethod
     def make_elastic_client(
@@ -135,16 +135,16 @@ class BaseTransfer(Command):
             load_factor=self.loki_pool_load_factor,
         )
 
-        await self.pos_store.init(stop_event=self.stop_event)
+        await self.state_store.init(stop_event=self.stop_event)
         if self.stop_event.is_set():
             return
 
-        if self.persist_start_over:
-            await self.pos_store.cleanup()
+        if self.state_start_over:
+            await self.state_store.cleanup()
 
-        self._latest_positions = await self.pos_store.load()
-        self.transferred_docs = self.latest_positions.transferred
-        self.logger.info("starting from pos %s", self.latest_positions)
+        self._latest_state = await self.state_store.load()
+        self.transferred_docs = self.latest_state.transferred
+        self.logger.info("starting from state %s", self.latest_state)
 
         self.total_docs, _ = await wait_task(
             self._get_total_docs(), event=self.stop_event
@@ -186,16 +186,12 @@ class BaseTransfer(Command):
         ]
 
     def make_es_search_after(self) -> Optional[list]:
-        pos = self.latest_positions
-        if not pos or pos.iszero:
+        state = self.latest_state
+        if not state or state.iszero:
             return None
+        return state.value
 
-        return [
-            pos.timestamp,
-            pos.log_offset,
-        ]
-
-    def make_es_scroller(self) -> AsyncIterable[tuple[dict, Positions]]:
+    def make_es_scroller(self) -> AsyncIterable[tuple[dict, State]]:
         return ElasticsearchScroller(
             es=self.es,
             es_index=self.es_index,
@@ -210,10 +206,10 @@ class BaseTransfer(Command):
 
     async def es_scroll(self):
         scroller = self.make_es_scroller()
-        async for doc, positions in scroller:
-            await self.process_es_doc(doc, positions)
+        async for doc, state in scroller:
+            await self.process_es_doc(doc, state)
 
-    async def process_es_doc(self, doc: dict, positions: Positions):
+    async def process_es_doc(self, doc: dict, state: State):
         source = doc["_source"]
         if not source:
             return
@@ -227,7 +223,7 @@ class BaseTransfer(Command):
         entry = json.dumps(source, sort_keys=True)
 
         self.loki_batch.push(labels=labels, timestamp=timestamp, entry=entry)
-        self._latest_positions = positions
+        self._latest_state = state
 
         if self.loki_batch.total_size >= self.loki_batch_size:
             async with self._flush_lock:
@@ -239,11 +235,11 @@ class BaseTransfer(Command):
             return
 
         await wait_task(
-            self.loki_pool.push(self.loki_batch, self.latest_positions),
+            self.loki_pool.push(self.loki_batch, self.latest_state),
             event=self.stop_event,
         )
 
-    async def send_to_loki(self, batch: LokiBatch, positions: Positions):
+    async def send_to_loki(self, batch: LokiBatch, state: State):
         _, transferred_size = await self.loki.push(batch, stop_event=self.stop_event)
 
         self.transferred_docs += batch.total_docs
@@ -258,7 +254,7 @@ class BaseTransfer(Command):
             seconds_to_str(self._eta),
             self._speed,
         )
-        await self.pos_store.save(positions, self.transferred_docs)
+        await self.state_store.save(state, self.transferred_docs)
 
         if self.loki_wait_timeout:
             await wait_task(
