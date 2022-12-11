@@ -27,7 +27,7 @@ docker compose up
 
 Once you run it, all the components will spin up and after **180 seconds** es2loki
 will transfer logs from Elasticsearch to Loki. You can validate that by
-accessing Grafana Explore and issue a following query for the December 3rd, 2022:
+accessing Grafana Explore and issue a following query for the **December 3rd, 2022**:
 ```
 {job="logs"}
 ```

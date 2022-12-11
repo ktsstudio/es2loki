@@ -69,32 +69,43 @@ But if you have your fields that could guarantee such a behaviour - please
 override a `make_es_sort` and `make_es_search_after` methods.
 
 * `make_es_sort` defines by which fields the sorting will happen.
-* `make_es_search_after` defines an initial "offset". It is needed to resume es2loki after a shutdown.
+* `make_es_search_after` defines an initial "offset". It is needed to resume es2loki after a shutdown. By default it
+  extracts information from the internal state, which can be saved persistently.
+
+### Persistence
+
+`es2loki` has a mechanism to store the Elasticsearch scrolling state
+in the database (highly recommended). In this mode `es2loki` saves
+the scrolling state inside an SQL database (PostgreSQL, MySQL, SQLite, ...).
+
+You can opt out of enabling persistence completely using `STATE_MODE=none` env variable, which is the default.
+But we highly recommend to enable persistence with some SQL storage.
 
 ## Configuration
 
-| name                    | default                            | description                                                        |
-|-------------------------|------------------------------------|--------------------------------------------------------------------|
-| ELASTIC_HOSTS           | http://localhost:9200              | Elasticsearch hosts. Separate multiple hosts using `,`             |
-| ELASTIC_USER            | ""                                 | Elasticsearch username                                             |
-| ELASTIC_PASSWORD        | ""                                 | Elasticsearch password                                             |
-| ELASTIC_INDEX           | ""                                 | Elasticsearch index pattern to search documents in                 |
-| ELASTIC_BATCH_SIZE      | 3000                               | How much documents to extract from ES in one batch                 |
-| ELASTIC_TIMEOUT         | 120                                | Elasticsearch `search` query timeout                               |
-| ELASTIC_MAX_DATE        |                                    | Upper date limit (format is the same as @timestamp field)          |
-| ELASTIC_TIMESTAMP_FIELD | @timestamp                         | Name of timesteamp field in Elasticsearch                          |
-| LOKI_URL                | http://localhost:3100              | Loki instance URL                                                  |
-| LOKI_USERNAME           | ""                                 | Loki username                                                      |
-| LOKI_PASSWORD           | ""                                 | Loki password                                                      |
-| LOKI_TENANT_ID          | ""                                 | Loki Tenant ID (Org ID)                                            |
-| LOKI_BATCH_SIZE         | 1048576                            | Maximum batch size (in bytes)                                      |
-| LOKI_POOL_LOAD_FACTOR   | 10                                 | Maximum number of push non-waiting requests                        |
-| LOKI_PUSH_MODE          | pb                                 | `pb` - protobuf + snappy, `gzip` - json + gzip, `json` - just json |
-| LOKI_WAIT_TIMEOUT       | 0                                  | How much time (in seconds) to wait after a Loki push request       |
-| STATE_MODE              | db                                 | Configures es2loki persistence (`db` is recommended).              |
-| STATE_START_OVER        |                                    | Clean up persisted data and start over                             |
-| STATE_FILE_DIR          | /var/es2loki                       | `file` persistence location                                        |
-| STATE_DB_URL            | postgres://127.0.0.1:5432/postgres | Database URL for `db` persistence                                  |
+You can configure `es2loki` using the following environment variables:
+
+| name                    | default                            | description                                                                                        |
+|-------------------------|------------------------------------|----------------------------------------------------------------------------------------------------|
+| ELASTIC_HOSTS           | http://localhost:9200              | Elasticsearch hosts. Separate multiple hosts using `,`                                             |
+| ELASTIC_USER            | ""                                 | Elasticsearch username                                                                             |
+| ELASTIC_PASSWORD        | ""                                 | Elasticsearch password                                                                             |
+| ELASTIC_INDEX           | ""                                 | Elasticsearch index pattern to search documents in                                                 |
+| ELASTIC_BATCH_SIZE      | 3000                               | How much documents to extract from ES in one batch                                                 |
+| ELASTIC_TIMEOUT         | 120                                | Elasticsearch `search` query timeout                                                               |
+| ELASTIC_MAX_DATE        |                                    | Upper date limit (format is the same as @timestamp field)                                          |
+| ELASTIC_TIMESTAMP_FIELD | @timestamp                         | Name of timesteamp field in Elasticsearch                                                          |
+| LOKI_URL                | http://localhost:3100              | Loki instance URL                                                                                  |
+| LOKI_USERNAME           | ""                                 | Loki username                                                                                      |
+| LOKI_PASSWORD           | ""                                 | Loki password                                                                                      |
+| LOKI_TENANT_ID          | ""                                 | Loki Tenant ID (Org ID)                                                                            |
+| LOKI_BATCH_SIZE         | 1048576                            | Maximum batch size (in bytes)                                                                      |
+| LOKI_POOL_LOAD_FACTOR   | 10                                 | Maximum number of push non-waiting requests                                                        |
+| LOKI_PUSH_MODE          | pb                                 | `pb` - protobuf + snappy, `gzip` - json + gzip, `json` - just json                                 |
+| LOKI_WAIT_TIMEOUT       | 0                                  | How much time (in seconds) to wait after a Loki push request                                       |
+| STATE_MODE              | none                               | Configures es2loki persistence (`db` is recommended). Use `none` to disable persistence completely |
+| STATE_START_OVER        |                                    | Clean up persisted data and start over                                                             |
+| STATE_DB_URL            | postgres://127.0.0.1:5432/postgres | Database URL for `db` persistence                                                                  |
 
 
 

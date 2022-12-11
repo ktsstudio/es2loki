@@ -1,5 +1,9 @@
+# 0.1.5
+* Make STATE_MODE=none to be a default to ease start up
+* Remove STATE_MODE=file as the same may be achieved with SQLite
+
 # 0.1.4
-* refactor positions and rename it to state
+* Refactor positions and rename it to state
 
 # 0.1.0
 

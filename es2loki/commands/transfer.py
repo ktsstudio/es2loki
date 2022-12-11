@@ -16,12 +16,14 @@ from es2loki.es import ElasticsearchScroller
 from es2loki.loki import Loki, LokiBatch
 from es2loki.state import StateStore
 from es2loki.state.db import DBStateStore
-from es2loki.state.file import FileStateStore
+from es2loki.state.dummy import DummyStateStore
 from es2loki.state.types import State
 from es2loki.utils import seconds_to_str, size_str
 
 
 class BaseTransfer(Command):
+    state_store: StateStore
+
     def __init__(self, *args, **kwargs):
         kwargs.setdefault("execute_timeout", 128)
         super().__init__(*args, **kwargs)
@@ -47,15 +49,10 @@ class BaseTransfer(Command):
         self.loki_wait_timeout = float(os.getenv("LOKI_WAIT_TIMEOUT", 0))
 
         self.state_start_over = bool(int(os.getenv("STATE_START_OVER", 0)))
-        self.state_mode = os.getenv("STATE_MODE", "db")
-        self.state_file_dir = (
-            os.getenv("STATE_FILE_DIR", "/var/es2loki") or ""
-        ).strip()
+        self.state_mode = os.getenv("STATE_MODE", "none")
         self.state_db_url = os.getenv(
             "STATE_DB_URL", "postgres://127.0.0.1:5432/postgres"
         )
-
-        self.state_store: StateStore
 
         if self.state_mode == "db":
             self.state_store = DBStateStore(
@@ -63,12 +60,12 @@ class BaseTransfer(Command):
                 url=self.state_db_url,
                 dry_run=self.dry_run,
             )
-        else:
-            self.state_store = FileStateStore(
-                state_dir=self.state_file_dir,
-                file_suffix=self.es_index,
+        elif self.state_mode == "none":
+            self.state_store = DummyStateStore(
                 dry_run=self.dry_run,
             )
+        else:
+            raise ValueError("Unknown STATE_MODE. Possible values are: (db, none)")
 
         self.es = self.make_elastic_client(
             hosts=es_hosts,

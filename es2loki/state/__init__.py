@@ -5,7 +5,7 @@ from .types import State
 
 
 class StateStore:
-    def __init__(self, dry_run: bool = False):
+    def __init__(self, *, dry_run: bool = False):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.dry_run = dry_run
 
@@ -19,4 +19,4 @@ class StateStore:
         raise NotImplementedError
 
     async def cleanup(self):
-        raise NotImplementedError
+        pass
