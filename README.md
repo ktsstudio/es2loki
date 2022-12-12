@@ -81,6 +81,23 @@ the scrolling state inside an SQL database (PostgreSQL, MySQL, SQLite, ...).
 You can opt out of enabling persistence completely using `STATE_MODE=none` env variable, which is the default.
 But we highly recommend to enable persistence with some SQL storage.
 
+### Deployment
+
+You can deploy `es2loki` via our helm chart.
+
+Add `kts` repo:
+```bash
+helm repo add kts https://charts.kts.studio
+helm repo update
+```
+
+Install the chart:
+```bash
+helm upgrade --install RELEASE_NAME kts/es2loki
+```
+
+More information about helm chart deployment can be found [here](https://github.com/ktsstudio/helm-charts/tree/main/charts/es2loki).
+
 ## Configuration
 
 You can configure `es2loki` using the following environment variables:

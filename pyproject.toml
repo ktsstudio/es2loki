@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "es2loki"
-version = "0.1.5"
+version = "0.1.6"
 description = "es2loki is a migration library that helps to transfer logs from Elasticsearch to Grafana Loki"
 authors = ["igorcoding <igorcoding@gmail.com>"]
 license = "Apache 2.0"

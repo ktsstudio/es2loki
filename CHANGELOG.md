@@ -1,3 +1,6 @@
+# 0.1.6
+* Update deployment information in the README
+
 # 0.1.5
 * Make STATE_MODE=none to be a default to ease start up
 * Remove STATE_MODE=file as the same may be achieved with SQLite
